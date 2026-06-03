@@ -1,0 +1,41 @@
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+*{
+  box-sizing: border-box;
+}
+
+.pattern-background {
+  position: relative;
+  inset: 50;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.dark .pattern-background {
+  background-color: #030101;
+}
+
+.light .pattern-background {
+  background-color: #999999;
+}
+
+.pattern-background::before {
+  content: "";
+  position: absolute;
+  inset: -100%;
+  transform: rotate(150deg);
+
+  background-image:
+  linear-gradient(rgba(0,0,0,.08) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(0,0,0,.09) 1px, transparent 1px);
+
+  background-size: 40px 40px;
+  pointer-events: none;
+}
+
+.dark .pattern-background::before {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+}
