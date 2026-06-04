@@ -1,5 +1,7 @@
 import React from "react";
 import { useState } from "react";
+// @ts-ignore
+const BASE_ENDPOINT = import.meta.env.API_BASE_URL;
 
 function ResumeUploader() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -20,7 +22,7 @@ function ResumeUploader() {
       formData.append("resume", file);
 
       const response = await fetch(
-        "http://localhost:5000/upload_resume",
+        `${BASE_ENDPOINT}/upload_resume`,
         {
           method: "POST",
           body: formData,
@@ -45,7 +47,7 @@ function ResumeUploader() {
 
     try {
       const response = await fetch(
-        "http://localhost:5000/analyze_resume",
+        `${BASE_ENDPOINT}/analyze_resume`,
         {
           method: "POST",
         }
