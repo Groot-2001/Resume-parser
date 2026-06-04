@@ -1,13 +1,12 @@
 import React from "react";
 import { useState } from "react";
-// @ts-ignore
-const BASE_ENDPOINT = import.meta.env.API_BASE_URL;
 
 function ResumeUploader() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [resumeId, setResumeId] = useState("");   
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -19,10 +18,10 @@ function ResumeUploader() {
 
     try {
       const formData = new FormData();
-      formData.append("resume", file);
+      formData.append("file", file);
 
       const response = await fetch(
-        `${BASE_ENDPOINT}/upload_resume`,
+        `http://localhost:5000/api/resume/upload_resume`,
         {
           method: "POST",
           body: formData,
@@ -32,7 +31,8 @@ function ResumeUploader() {
       if (!response.ok) {
         throw new Error("Upload failed");
       }
-
+      const data = await response.json();
+      setResumeId(data?.resumeId);
       setUploadSuccess(true);
     } catch (error) {
       console.error(error);
@@ -47,10 +47,17 @@ function ResumeUploader() {
 
     try {
       const response = await fetch(
-        `${BASE_ENDPOINT}/analyze_resume`,
+        `http://localhost:5000/api/resume/analyze_resume`,
         {
           method: "POST",
-        }
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            resumeId,
+          }),
+        },
+        
       );
 
       const data = await response.json();
