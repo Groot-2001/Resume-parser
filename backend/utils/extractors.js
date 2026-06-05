@@ -271,6 +271,7 @@ const skillsDB  = [
     "BCA",
     "BSc",
     "B.Sc",
+    "BSc (IT)",
     "MCA",
     "MBA",
     "M.Tech",

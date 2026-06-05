@@ -1,5 +1,6 @@
 import React from "react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function ResumeUploader() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -7,6 +8,7 @@ function ResumeUploader() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [resumeId, setResumeId] = useState("");   
+  const navigate = useNavigate();
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -61,8 +63,9 @@ function ResumeUploader() {
       );
 
       const data = await response.json();
-
       console.log(data);
+      navigate(`/analysis/${resumeId}`);
+      
     } catch (error) {
       console.error(error);
     } finally {

@@ -12,7 +12,10 @@ const app = express();
 
 //Setting up with helmet
 app.use(helmet.hidePoweredBy());
-app.use(helmet.frameguard({ action: "deny" }));
+app.use(helmet({
+  frameguard: false,
+    contentSecurityPolicy: false,
+}));
 app.use(helmet.xssFilter());
 app.use(helmet.noSniff());
 app.use(helmet.ieNoOpen());
@@ -23,6 +26,7 @@ dbconn();
 
 // parse application/json
 app.use(bodyParser.json({ limit: "10mb" }));
+app.use("/uploads", express.static("uploads"));
 
 // parse application/x-www-form-urlencoded
 app.use(

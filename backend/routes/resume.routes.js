@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const { uploadResume, analyze_resume } = require("../controllers/resume.controller");
+const { uploadResume, analyze_resume, get_resume_analysis } = require("../controllers/resume.controller");
 const fileFilter = require("../utils/file.filter");
 const path = require("path");
 const fs = require("fs");
@@ -38,6 +38,7 @@ router.get("/health",(req,res)=>{
 });
 
 router.post("/upload_resume",upload.single('file'),uploadResume);
-router.post("/analyze_resume",upload.single('file'),analyze_resume);
+router.post("/analyze_resume",analyze_resume);
+router.get("/:id",get_resume_analysis);
 
 module.exports = router;
