@@ -1,9 +1,20 @@
 import React, {useEffect, useState} from "react";
-import {useParams} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
+import ResumeSummary from "../components/ResumeSummary";
+import Navbar from "../components/Navbar";
 
 function Analysis() {
   const resumeId = useParams().id;
   const [analysisData, setAnalysisData] = useState(null);
+  const navigate = useNavigate();
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle(
+      "dark",
+      darkMode
+    );
+  }, [darkMode]);
 
   useEffect(() => {
     const fetchAnalysis = async () => {
@@ -11,7 +22,7 @@ function Analysis() {
         `http://localhost:5000/api/resume/${resumeId}`
       );
       const data = await response.json();
-      console.log("Data:",data);
+      console.log("Data:", data);
       setAnalysisData(data);
     };
 
@@ -29,10 +40,8 @@ function Analysis() {
   const resume = (analysisData as any)?.data;
 
   return (
-    <div className="bg-white min-h-screen px-8 py-8 dark:bg-black">
-      <h1 className="text-center text-4xl text-black font-bold mb-8 dark:text-white">
-        Resume Analysis
-      </h1>
+    <div className="bg-white min-h-screen px-8 py-8  pattern-background">
+      <Navbar header1="Resume Overview" />
       <div className="grid grid-cols-12 gap-6">
         <div
           className="col-span-5 
@@ -48,41 +57,14 @@ function Analysis() {
         justify-center
         "
         >
-        <iframe
-          src={analysisData?.resumeUrl}
-          title="Resume Preview"
-          className="w-full h-full rounded-3xl"
-        />
+          <iframe
+            src={(analysisData as any)?.resumeUrl}
+            title="Resume Preview"
+            className="w-full h-full rounded-3xl"
+          />
         </div>
         <div className="col-span-7 space-y-6">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-3xl border border-black/20 dark:border-white/10 bg-black/5 dark:bg-white/5 p-5 text-center">
-              <p className="text-sm text-gray-500">
-                Skills Found
-              </p>
-              <h3 className="text-4xl font-bold mt-2">
-                {resume.skills.length}
-              </h3>
-            </div>
-
-            <div className="rounded-3xl border border-black/20 dark:border-white/10 bg-black/5 dark:bg-white/5 p-5 text-center">
-              <p className="text-sm text-gray-500">
-                Experience Entries
-              </p>
-              <h3 className="text-4xl font-bold mt-2">
-                {resume.experience.length}
-              </h3>
-            </div>
-
-            <div className="rounded-3xl border border-black/20 dark:border-white/10 bg-black/5 dark:bg-white/5 p-5 text-center">
-              <p className="text-sm text-gray-500">
-                Education Entries
-              </p>
-              <h3 className="text-4xl font-bold mt-2">
-                {resume.education.length}
-              </h3>
-            </div>
-          </div>
+          <ResumeSummary resume={resume} />
           <div
             className="rounded-3xl 
           border 
@@ -252,6 +234,45 @@ function Analysis() {
                 )
               )}
             </div>
+          </div>
+          <div
+            className="
+  rounded-3xl
+  border
+  border-black/20
+  dark:border-white/10
+  bg-linear-to-r
+  from-purple-500/10
+  to-blue-500/10
+  p-8
+  text-center
+  "
+          >
+            <h2 className="text-2xl font-bold mb-4">
+              Resume Successfully Parsed ✓
+            </h2>
+
+            <p className="text-gray-500 mb-6">
+              Your resume has been analyzed successfully.
+              Continue to ATS Optimization to see how well
+              your resume matches a target job description.
+            </p>
+
+            <button
+              onClick={() => navigate(`/ats/${resumeId}`)}
+              className="
+      px-8
+      py-3
+      rounded-xl
+      bg-purple-600
+      text-white
+      font-semibold
+      hover:bg-purple-700
+      transition
+    "
+            >
+              Analyze ATS Compatibility
+            </button>
           </div>
         </div>
       </div>

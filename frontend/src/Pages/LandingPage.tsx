@@ -8,7 +8,7 @@ function LandingPage() {
   return (
     <div className="landing-page min-h-screen w-full pattern-background">
       {/* Navbar */}
-      <Navbar/>
+      <Navbar header1="Shiva" header2="Silmawala"/>
       {/* Hero Section */}
       <section className="relative z-10 flex min-h-[80vh] flex-col items-center justify-center text-center px-4">
         <span className="mb-4 rounded-full border border-blue-400/30 bg-blue-400/10 px-4 py-1 text-sm font-medium text-blue-400">

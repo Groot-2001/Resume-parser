@@ -63,7 +63,6 @@ function ResumeUploader() {
       );
 
       const data = await response.json();
-      console.log(data);
       navigate(`/analysis/${resumeId}`);
       
     } catch (error) {
@@ -147,7 +146,7 @@ function ResumeUploader() {
         >
           {isAnalyzing
             ? "Analyzing Resume..."
-            : "Analyze Resume"}
+            : "Parse Resume"}
         </button>
       )}
     </div>
