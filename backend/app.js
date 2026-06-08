@@ -2,6 +2,7 @@ const express = require('express');
 const helmet = require("helmet");
 const bodyParser = require("body-parser");
 const resumeRoutes = require("./routes/resume.routes");
+const atsRoutes = require("./routes/ats.routes");
 const multer = require("multer");
 
 require("dotenv").config();
@@ -53,6 +54,7 @@ app.use((req, res, next) => {
 
  //routes
   app.use("/api/resume", resumeRoutes);
+  app.use("/api/ats", atsRoutes);
   
   app.get("/health", (req, res) => {
     res.status(200).json({ status: "ok" });

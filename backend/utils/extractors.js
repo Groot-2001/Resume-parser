@@ -408,4 +408,25 @@ function parseResume(text){
       };
  }
 
-module.exports = {parseResume, ExtractName , ExtractEmail , ExtractPhone , ExtractGithub , ExtractLinkedIn , ExtractSkills , ExtractExperience , ExtractEducation};
+ function escapeRegex(str) {
+    return str.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\$&"
+    );
+  }
+  
+  function extractSkillsFromJD(text) {
+    return skillsDB.filter((skill) => {
+      const escapedSkill =
+        escapeRegex(skill);
+  
+      const regex = new RegExp(
+        `\\b${escapedSkill}\\b`,
+        "i"
+      );
+  
+      return regex.test(text);
+    });
+  }
+
+module.exports = {parseResume, ExtractName , ExtractEmail , ExtractPhone , ExtractGithub , ExtractLinkedIn , ExtractSkills , ExtractExperience , ExtractEducation , extractSkillsFromJD};

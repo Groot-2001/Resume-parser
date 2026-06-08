@@ -19,6 +19,8 @@ function Ats() {
   const [analysisType, setAnalysisType] = useState<
     "traditional" | "ai"
   >("traditional");
+  const [analysisCompleted, setAnalysisCompleted] =
+    useState(false);
 
   // Fetch resume data (same as Analysis page)
   useEffect(() => {
@@ -38,7 +40,7 @@ function Ats() {
     if (resumeId) fetchResume();
   }, [resumeId]);
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!jobDescription.trim()) {
       alert(
         "Please paste a job description before analyzing."
@@ -46,10 +48,55 @@ function Ats() {
       return;
     }
     console.log("Job Description:", jobDescription);
-    alert(
-      "ATS analysis coming next — backend integration in progress."
-    );
-    // In the future, we will call the backend API here and setAnalysisResult(response)
+    try {
+      setIsAnalyzing(true);
+
+      const response = await fetch(
+        `http://localhost:5000/api/ats/`,
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            resumeId,
+            jobDescription,
+            analysisType,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          result.message || "ATS Analysis Failed"
+        );
+      }
+
+      setAnalysisResult(result?.data);
+      setAnalysisCompleted(true);
+      setJobDescription("");
+    } catch (error) {
+      console.error(error);
+      alert(error);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const getButtonText = () => {
+    if (isAnalyzing) {
+      return "Analyzing...";
+    }
+  
+    if (!jobDescription.trim()) {
+      return analysisCompleted
+        ? "✓ Analysis Successful"
+        : "Paste Job Description";
+    }
+  
+    return "Analyze ATS Compatibility";
   };
 
   if (loading) {
@@ -90,6 +137,28 @@ function Ats() {
                 </h2>
               </div>
               <ResumeSummary resume={resumeData} />
+              <br />
+
+              <div>
+                <h2 className="text-2xl font-semibold mb-3 text-black dark:text-white">
+                  ATS Results
+                </h2>
+                {analysisResult ? (
+                  <AtsResult analysis={analysisResult} />
+                ) : (
+                  <div className="rounded-3xl border border-dashed border-purple-500/50 bg-purple-500/5 p-8 text-center">
+                    <p className="text-gray-600 dark:text-gray-300">
+                      ATS analysis results will appear here
+                      after you analyze a job description.
+                    </p>
+
+                    <p className="text-sm text-gray-500 mt-2">
+                      Paste a job description and click
+                      Analyze ATS Compatibility.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -183,9 +252,13 @@ function Ats() {
               <textarea
                 id="jobDescription"
                 value={jobDescription}
-                onChange={(e) =>
-                  setJobDescription(e.target.value)
-                }
+                onChange={(e) => {
+                  setJobDescription(e.target.value);
+                
+                  if (analysisCompleted) {
+                    setAnalysisCompleted(false);
+                  }
+                }}
                 placeholder="Paste the target job description here..."
                 className="w-full h-80 p-4 rounded-2xl border border-black/20 dark:border-white/10 bg-white dark:bg-black/50 text-black dark:text-white resize-y focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
@@ -194,31 +267,8 @@ function Ats() {
                 disabled={isAnalyzing}
                 className="mt-6 w-full py-3 rounded-xl bg-purple-600 text-white font-semibold hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isAnalyzing
-                  ? "Analyzing..."
-                  : "Analyze ATS Compatibility"}
+                 {getButtonText()}
               </button>
-            </div>
-
-            <div>
-              <h2 className="text-2xl font-semibold mb-3 text-black dark:text-white">
-                ATS Results
-              </h2>
-              {analysisResult ? (
-                <AtsResult analysis={analysisResult} />
-              ) : (
-                false
-              )}
-              <div className="rounded-3xl border border-dashed border-purple-500/50 bg-purple-500/5 p-8 text-center">
-                <p className="text-gray-600 dark:text-gray-300">
-                  ATS analysis results will appear here
-                  after you analyze a job description.
-                </p>
-                <p className="text-sm text-gray-500 mt-2">
-                  (Backend integration coming soon — this is
-                  a UI placeholder)
-                </p>
-              </div>
             </div>
           </div>
         </div>

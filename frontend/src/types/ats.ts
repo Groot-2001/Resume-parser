@@ -1,5 +1,9 @@
 export interface ATSAnalysis {
     atsScore: number;
+
+    rating: string;
+
+    summary: string;
   
     matchedSkills: string[];
   
