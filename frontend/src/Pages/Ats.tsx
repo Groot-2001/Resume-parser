@@ -6,6 +6,7 @@ import AtsResult from "../components/AtsResult";
 import {ATSAnalysis} from "../types/ats";
 import {ResumeAnalysis} from "../types/resume";
 import Navbar from "../components/Navbar";
+import AIResult from "../components/AIResult";
 
 function Ats() {
   const {id: resumeId} = useParams<{id: string}>();
@@ -15,12 +16,15 @@ function Ats() {
   const [jobDescription, setJobDescription] = useState("");
   const [analysisResult, setAnalysisResult] =
     useState<ATSAnalysis | null>(null);
+  const [aiResult, setAiResult] = useState<any>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisType, setAnalysisType] = useState<
     "traditional" | "ai"
   >("traditional");
   const [analysisCompleted, setAnalysisCompleted] =
     useState(false);
+    const [isGeneratingResume, setIsGeneratingResume] =
+  useState(false);
 
   // Fetch resume data (same as Analysis page)
   useEffect(() => {
@@ -73,15 +77,52 @@ function Ats() {
           result.message || "ATS Analysis Failed"
         );
       }
+      if (analysisType === "ai") {
+        setAiResult(result.data);
+        setAnalysisResult(null);
+      } else {
+        setAnalysisResult(result?.data);
+        setAiResult(null);
+      }
 
-      setAnalysisResult(result?.data);
       setAnalysisCompleted(true);
-      setJobDescription("");
     } catch (error) {
-      console.error(error);
       alert(error);
     } finally {
       setIsAnalyzing(false);
+    }
+  };
+
+  const handleGenerateResume = async () => {
+    try {
+      setIsGeneratingResume(true);
+  
+      const response = await fetch(
+        "http://localhost:5000/api/resume/generate-optimized-resume",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            resumeId,
+            jobDescription,
+          }),
+        }
+      );
+  
+      const result =
+        await response.json();
+  
+      console.log(
+        "Optimized Resume:",
+        result.data
+      );
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsGeneratingResume(false);
     }
   };
 
@@ -89,13 +130,13 @@ function Ats() {
     if (isAnalyzing) {
       return "Analyzing...";
     }
-  
+
     if (!jobDescription.trim()) {
       return analysisCompleted
         ? "✓ Analysis Successful"
         : "Paste Job Description";
     }
-  
+
     return "Analyze ATS Compatibility";
   };
 
@@ -145,6 +186,8 @@ function Ats() {
                 </h2>
                 {analysisResult ? (
                   <AtsResult analysis={analysisResult} />
+                ) : aiResult ? (
+                  <AIResult analysis={aiResult} onGenerateResume={ handleGenerateResume} isGenerating={ isGeneratingResume } />
                 ) : (
                   <div className="rounded-3xl border border-dashed border-purple-500/50 bg-purple-500/5 p-8 text-center">
                     <p className="text-gray-600 dark:text-gray-300">
@@ -243,7 +286,7 @@ function Ats() {
                     </h3>
 
                     <p className="text-sm text-gray-500 mt-1">
-                      Gemini-powered review and
+                      Grok-powered review and
                       recommendations
                     </p>
                   </label>
@@ -254,7 +297,7 @@ function Ats() {
                 value={jobDescription}
                 onChange={(e) => {
                   setJobDescription(e.target.value);
-                
+
                   if (analysisCompleted) {
                     setAnalysisCompleted(false);
                   }
@@ -267,7 +310,7 @@ function Ats() {
                 disabled={isAnalyzing}
                 className="mt-6 w-full py-3 rounded-xl bg-purple-600 text-white font-semibold hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                 {getButtonText()}
+                {getButtonText()}
               </button>
             </div>
           </div>

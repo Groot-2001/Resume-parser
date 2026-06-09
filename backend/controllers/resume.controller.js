@@ -4,6 +4,37 @@ const Resume = require("../models/resume_model");
 const {isValidObjectId} = require("mongoose");
 const {parseResume} = require("../utils/extractors");
 const path = require("path");
+const z = require("zod");
+const { resumeOptimizeWithAI } = require("../services/ai.service");
+const { validateObjectId } = require("../utils/validate.object.id");
+
+const generateResumeSchema  = z.object({
+  resumeId: z.string().min(5, "Resume ID is required"),
+  jobDescription: z
+    .string()
+    .min(
+      50,
+      "Job description must be at least 50 characters long"
+    )
+    .max(
+      3000,
+      "Job description is too long max 3000 characters allowed"
+    ),
+});
+
+const optimizedResumeSchema = z.object({
+  summary: z.string(),
+
+  skills: z.array(z.string()),
+
+  experience: z.array(
+    z.object({
+      title: z.string(),
+      company: z.string(),
+      bulletPoints: z.array(z.string()),
+    })
+  ),
+});
 
 const uploadResume = async (req, res) => {
   try {
@@ -110,15 +141,97 @@ const get_resume_analysis = async (req, res) => {
       });
     }
 
-    console.log(`http://localhost:5000/uploads/${path.basename(resume.filePath)}`)
+    console.log(
+      `http://localhost:5000/uploads/${path.basename(
+        resume.filePath
+      )}`
+    );
 
     return res.status(200).json({
       success: true,
       resumeId: resume._id,
-      resumeUrl: `http://localhost:5000/uploads/${path.basename(resume.filePath)}`,
+      resumeUrl: `http://localhost:5000/uploads/${path.basename(
+        resume.filePath
+      )}`,
       data: resume.analysis,
     });
   } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+const generate_optimzed_resume = async (req, res) => {
+  try {
+    // check if resume , jobDescription , analysisType is present
+    const result = generateResumeSchema.safeParse(
+      req.body
+    );
+
+    if (!result.success) {
+      const formattedErrors = result.error.issues.map(
+        (issue) => ({
+          field: issue.path.join(".") || "unknown",
+          message: issue.message,
+          received:
+            issue.received !== undefined
+              ? issue.received
+              : undefined,
+        })
+      );
+
+      return res.status(400).json({
+        success: false,
+        message:
+          "Validation failed. Please check your input.",
+        errors: formattedErrors,
+        errorCount: formattedErrors.length,
+      });
+    }
+
+    const validatedData = result.data;
+
+    if (!validateObjectId(validatedData?.resumeId)) {
+      return res.status(400).json({
+        message: "Invalid Resume Id",
+      });
+    }
+
+    // fetch resume
+    const resume = await Resume.findById(
+      validatedData?.resumeId
+    );
+
+    if (!resume) {
+      return res.status(404).json({
+        success: false,
+        message: "Resume not found",
+      });
+    }
+
+    if (!resume.rawText) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Resume rawText not found. Please analyze the resume first.",
+      });
+    }
+
+    const optimizedResume = await resumeOptimizeWithAI(
+      resume.rawText,
+      validatedData.jobDescription
+    );
+    const validated = optimizedResumeSchema.parse(optimizedResume);
+    resume.optimizedResume = validated;
+    await resume.save();
+    return res.status(200).json({
+      success: true,
+      data: validated,
+    });
+  } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: "Internal Server Error",
@@ -130,4 +243,5 @@ module.exports = {
   uploadResume,
   analyze_resume,
   get_resume_analysis,
+  generate_optimzed_resume,
 };

@@ -41,6 +41,64 @@ const ResumeSchema = mongoose.Schema(
         endDate: String,
       }],
     },
+    aiAnalysis: {
+      overallAssessment: String,
+
+      strengths: {
+        type: [String],
+        default: [],
+      },
+
+      areasForImprovement: {
+        type: [String],
+        default: [],
+      },
+
+      actionPlan: {
+        type: [String],
+        default: [],
+      },
+
+      resumeBulletSuggestions: {
+        type: [String],
+        default: [],
+      },
+
+      hiringRecommendation: {
+        status: String,
+        reasoning: String,
+      },
+
+      generatedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
+    optimizedResume: {
+      summary: String,
+    
+      skills: {
+        type: [String],
+        default: [],
+      },
+    
+      experience: [
+        {
+          title: String,
+          company: String,
+    
+          bulletPoints: {
+            type: [String],
+            default: [],
+          },
+        },
+      ],
+    
+      generatedAt: {
+        type: Date,
+        default: Date.now,
+      },
+    },
   },
   {timestamps: true}
 );
