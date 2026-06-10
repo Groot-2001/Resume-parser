@@ -430,6 +430,6 @@ Backend Engineer
 
 Mumbai, India
 
-GitHub: github.com/shivasilmawala
+GitHub: github.com/groot-2001
 
-LinkedIn: linkedin.com/in/shivasilmawala
+LinkedIn:  https://www.linkedin.com/in/shiva-silmawala-0876261a3/.
