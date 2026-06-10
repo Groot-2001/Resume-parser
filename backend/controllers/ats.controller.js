@@ -84,7 +84,7 @@ const analyzeATS = async (req, res) => {
           );
       }
 
-    if (!resume.analysis) {
+    if (!resume.rawText) {
         return res.status(400).json({
           success: false,
           message:
@@ -93,7 +93,7 @@ const analyzeATS = async (req, res) => {
       }
 
       if (validatedData.analysisType === "ai") {
-        const aiResult = await analyzeResumeWithAI( resume.analysis, validatedData.jobDescription);
+        const aiResult = await analyzeResumeWithAI( resume.rawText, validatedData.jobDescription);
         resume.aiAnalysis = aiResult; 
         await resume.save()
         return res.status(200).json({

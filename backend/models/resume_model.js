@@ -6,7 +6,12 @@ const ResumeSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    filePath: {
+    s3Key: {
+      type: String,
+      required: true,
+    },
+    
+    s3Url: {
       type: String,
       required: true,
     },
@@ -75,29 +80,8 @@ const ResumeSchema = mongoose.Schema(
       },
     },
     optimizedResume: {
-      summary: String,
-    
-      skills: {
-        type: [String],
-        default: [],
-      },
-    
-      experience: [
-        {
-          title: String,
-          company: String,
-    
-          bulletPoints: {
-            type: [String],
-            default: [],
-          },
-        },
-      ],
-    
-      generatedAt: {
-        type: Date,
-        default: Date.now,
-      },
+      type: mongoose.Schema.Types.Mixed,
+      default: null,
     },
   },
   {timestamps: true}

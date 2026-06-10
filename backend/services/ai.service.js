@@ -1,7 +1,7 @@
 const {Groq} = require("groq-sdk");
 require("dotenv").config();
 
-const ai = new Groq({ apiKey: process.env.GROK_API_KEY });
+const ai = new Groq({apiKey: process.env.GROK_API_KEY});
 
 const analyzeResumeWithAI = async (
   resumeAnalysis,
@@ -53,7 +53,7 @@ const analyzeResumeWithAI = async (
           - Each bullet should sound like a real resume achievement.
       - Action plan should contain practical next steps to improve ATS match.
       `;
-    const response = await ai.chat.completions.create({
+      const response = await ai.chat.completions.create({
         model: "llama-3.3-70b-versatile",
         messages: [
           {
@@ -66,18 +66,16 @@ const analyzeResumeWithAI = async (
 
       const content = response.choices[0].message.content;
       const cleanedResponse = content
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-    
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
       let parsedResponse;
 
       try {
         parsedResponse = JSON.parse(cleanedResponse);
       } catch (err) {
-        throw new Error(
-          "AI returned invalid JSON"
-        );
+        throw new Error("AI returned invalid JSON");
       }
       return parsedResponse;
     } catch (error) {
@@ -95,58 +93,183 @@ const analyzeResumeWithAI = async (
   }
 };
 
-const resumeOptimizeWithAI = async(resume, jobDescription)=>{
+const resumeOptimizeWithAI = async (
+  resume,
+  jobDescription
+) => {
   const maxRetries = 3;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       const prompt = `
-      You are an ATS resume optimization expert.
+      YYou are a senior technical recruiter, ATS optimization expert, and resume writer.
 
+      Your goal is to maximize ATS compatibility while preserving factual accuracy.
+      
       Resume:
-      ${JSON.stringify(resume.analysis)}
-
+      ${resume}
+      
       Job Description:
       ${jobDescription}
-
-      - Extract achievements and responsibilities from the resume.
-      - Rewrite them into ATS-friendly bullet points.
-      - Do not invent experience.
-      - Preserve all factual information.
-      - Use metrics and business impact when available.
-
-      Rules:
-      - Do not invent experience.
-      - Do not invent technologies.
-      - Improve wording.
-      - Use achievement-focused bullet points.
-      - Increase keyword relevance.
-
-      - Return ONLY valid JSON.
-      - Do not use markdown.
-      - Do not wrap JSON inside triple backticks json blocks.
-      - Do not include explanations before or after JSON.
-
+      
+      The resume above is the ONLY source of truth.
+      
+      STRICT RULES:
+      
+      FACTUAL ACCURACY
+      
+      * Never invent experience.
+      * Never invent companies.
+      * Never invent projects.
+      * Never invent job titles.
+      * Never invent certifications.
+      * Never invent education.
+      * Never invent achievements.
+      * Never invent metrics.
+      * Never invent technologies.
+      
+      PRESERVE IMPORTANT DATA
+      
+      * Preserve all percentages.
+      * Preserve all measurable impact.
+      * Preserve all uptime figures.
+      * Preserve all performance improvements.
+      * Preserve all production-scale metrics.
+      * Preserve all technologies already present in the resume.
+      
+      ATS OPTIMIZATION RULES
+      
+      1. JOB TITLE MATCH
+      
+      * Identify the target role from the Job Description.
+      * If appropriate, naturally include the target role keywords inside the professional summary.
+      * Do not falsely claim previous job titles.
+      
+      2. KEYWORD OPTIMIZATION
+      
+      * Extract important keywords from the Job Description.
+      * Prioritize:
+      
+        * Skills
+        * Technologies
+        * Frameworks
+        * Backend concepts
+        * Cloud tools
+        * Soft skills
+      * Only include keywords already supported by the resume.
+      
+      3. EXPERIENCE OPTIMIZATION
+      
+      * Rewrite every experience bullet.
+      * Start each bullet with a strong action verb.
+      * Focus on:
+      
+        * Business impact
+        * Technical impact
+        * Scale
+        * Performance improvements
+        * Reliability improvements
+        * Automation
+        * Integrations
+        * Backend engineering contributions
+      
+      4. MEASURABLE RESULTS
+      
+      * Every metric found in the resume must be preserved.
+      * Highlight measurable results whenever available.
+      * Prefer quantified achievements.
+      
+      5. SEARCHABILITY
+      
+      * Ensure important technologies appear naturally throughout the resume.
+      * Optimize for recruiter keyword searches.
+      
+      6. SUMMARY OPTIMIZATION
+      
+      * Create a concise professional summary.
+      * Include:
+      
+        * Years of experience
+        * Primary backend technologies
+        * Domain expertise
+        * Target role alignment
+      
+      7. SKILLS ORGANIZATION
+      
+      * Group skills into categories:
+      
+        * Backend
+        * Frontend
+        * Databases
+        * Cloud & Tools
+        * Concepts
+      
+      8. PROJECT OPTIMIZATION
+      
+      * Rewrite project descriptions into ATS-friendly bullets.
+      * Preserve technologies and functionality.
+      * Focus on engineering value and technical complexity.
+      * atleast two bullent points
+      
+      OUTPUT REQUIREMENTS
+      
+      Return ONLY valid JSON.
+      
+      Do not use markdown.
+      Do not use code blocks.
+      Do not include explanations.
+      
       {
-        "summary": "",
-        "skills": [],
-        "experience": [
-          {
-            "title": "",
-            "company": "",
-            "bulletPoints": []
-          }
-        ]
+      "header": {
+      "name": "",
+      "title": "",
+      "location": "",
+      "phone": "",
+      "email": "",
+      "github": "",
+      "linkedin": ""
+      },
+      
+      "summary": "",
+      
+      "skills": {
+      "backend": [],
+      "frontend": [],
+      "databases": [],
+      "cloudAndTools": [],
+      "concepts": []
+      },
+      
+      "experience": [
+      {
+      "title": "",
+      "company": "",
+      "startDate": "",
+      "endDate": "",
+      "bulletPoints": []
       }
-      - Keep the original title and company.
-      - Only rewrite the bullet points.
-      - Do not invent technologies.
-      - Do not invent projects.
-      - Use the exact experience entries from the resume.
-      - Never create new job titles.
-      - Never create new company names.
-      - Only improve bullet points.
+      ],
+      
+      "projects": [
+      {
+      "name": "",
+      "bulletPoints": []
+      }
+      ],
+      
+      "education": [
+      {
+      "degree": "",
+      "institution": "",
+      "score": "",
+      "year": ""
+      }
+      ],
+      
+      "certifications": []
+      }
       `;
-    const response = await ai.chat.completions.create({
+
+      const response = await ai.chat.completions.create({
         model: "llama-3.3-70b-versatile",
         messages: [
           {
@@ -159,18 +282,15 @@ const resumeOptimizeWithAI = async(resume, jobDescription)=>{
 
       const content = response.choices[0].message.content;
       const cleanedResponse = content
-      .replace(/```json/g, "")
-      .replace(/```/g, "")
-      .trim();
-    
-      
+        .replace(/```json/g, "")
+        .replace(/```/g, "")
+        .trim();
+
       let parsedResponse;
       try {
         parsedResponse = JSON.parse(cleanedResponse);
       } catch (err) {
-        throw new Error(
-          "AI returned invalid JSON"
-        );
+        throw new Error("AI returned invalid JSON");
       }
       return parsedResponse;
     } catch (error) {
@@ -186,6 +306,9 @@ const resumeOptimizeWithAI = async(resume, jobDescription)=>{
       throw error;
     }
   }
-}
+};
 
-module.exports = {analyzeResumeWithAI, resumeOptimizeWithAI};
+module.exports = {
+  analyzeResumeWithAI,
+  resumeOptimizeWithAI,
+};

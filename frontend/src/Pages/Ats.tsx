@@ -1,12 +1,14 @@
 // src/pages/Ats.tsx
 import React, {useState, useEffect} from "react";
 import {useParams} from "react-router-dom";
-import ResumeSummary from "../components/ResumeSummary";
 import AtsResult from "../components/AtsResult";
 import {ATSAnalysis} from "../types/ats";
 import {ResumeAnalysis} from "../types/resume";
 import Navbar from "../components/Navbar";
 import AIResult from "../components/AIResult";
+import {OptimizedResumeType} from "../types/optimizedResume";
+import OptimizedResume from "../components/OptimizedResume";
+import {useRef} from "react";
 
 function Ats() {
   const {id: resumeId} = useParams<{id: string}>();
@@ -23,15 +25,20 @@ function Ats() {
   >("traditional");
   const [analysisCompleted, setAnalysisCompleted] =
     useState(false);
-    const [isGeneratingResume, setIsGeneratingResume] =
-  useState(false);
+  const [isGeneratingResume, setIsGeneratingResume] =
+    useState(false);
+  const [optimizedResume, setOptimizedResume] =
+    useState<OptimizedResumeType | null>(null);
+  const [lastAnalyzedJD, setLastAnalyzedJD] = useState("");
+  const aiResultRef = useRef<HTMLDivElement>(null);
+  const optimizedResumeRef = useRef<HTMLDivElement>(null);
 
   // Fetch resume data (same as Analysis page)
   useEffect(() => {
     const fetchResume = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/resume/${resumeId}`
+          `${import.meta.env.VITE_API_BASE_URL}/api/resume/${resumeId}`
         );
         const data = await response.json();
         setResumeData(data?.data);
@@ -51,12 +58,12 @@ function Ats() {
       );
       return;
     }
-    console.log("Job Description:", jobDescription);
+    setOptimizedResume(null);
     try {
       setIsAnalyzing(true);
 
       const response = await fetch(
-        `http://localhost:5000/api/ats/`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/ats/`,
         {
           method: "POST",
           headers: {
@@ -80,12 +87,20 @@ function Ats() {
       if (analysisType === "ai") {
         setAiResult(result.data);
         setAnalysisResult(null);
+        setLastAnalyzedJD(jobDescription);
       } else {
         setAnalysisResult(result?.data);
         setAiResult(null);
+        setLastAnalyzedJD(jobDescription);
       }
 
       setAnalysisCompleted(true);
+      requestAnimationFrame(() => {
+        aiResultRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      });
     } catch (error) {
       alert(error);
     } finally {
@@ -96,33 +111,82 @@ function Ats() {
   const handleGenerateResume = async () => {
     try {
       setIsGeneratingResume(true);
-  
+
       const response = await fetch(
-        "http://localhost:5000/api/resume/generate-optimized-resume",
+        `${import.meta.env.VITE_API_BASE_URL}/api/resume/generate-optimized-resume`,
         {
           method: "POST",
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             resumeId,
-            jobDescription,
+            jobDescription: lastAnalyzedJD,
           }),
         }
       );
-  
-      const result =
-        await response.json();
-  
-      console.log(
-        "Optimized Resume:",
-        result.data
-      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          result.message ||
+            "Failed to generate optimized resume"
+        );
+      }
+
+      setOptimizedResume(result?.data);
+      requestAnimationFrame(() => {
+        optimizedResumeRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+        });
+      });
     } catch (error) {
       console.error(error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong"
+      );
     } finally {
       setIsGeneratingResume(false);
+    }
+  };
+
+  const handleDownloadResume = async () => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_BASE_URL}/api/resume/download-optimized-resume`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            resumeId,
+          }),
+        }
+      );
+
+      const blob = await response.blob();
+
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+
+      a.href = url;
+
+      a.download = "optimized_resume.pdf";
+
+      document.body.appendChild(a);
+
+      a.click();
+
+      a.remove();
+
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -164,50 +228,25 @@ function Ats() {
       <div className="max-w-7xl mx-auto">
         <Navbar header1="ATS Compatibility Analyzer" />
 
-        {/* Two-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* LEFT PANEL - Resume Summary */}
-          <div className="lg:col-span-5 space-y-6">
-            <div className="rounded-3xl border border-black/20 dark:border-white/10 bg-black/5 dark:bg-white/5 p-6 sticky top-6">
-              <div className="mb-4">
-                <p className="text-sm text-gray-500">
-                  Resume Name
-                </p>
-                <h2 className="text-xl font-bold wrap-break-word">
-                  {resumeName}
-                </h2>
-              </div>
-              <ResumeSummary resume={resumeData} />
-              <br />
-
-              <div>
-                <h2 className="text-2xl font-semibold mb-3 text-black dark:text-white">
-                  ATS Results
-                </h2>
-                {analysisResult ? (
-                  <AtsResult analysis={analysisResult} />
-                ) : aiResult ? (
-                  <AIResult analysis={aiResult} onGenerateResume={ handleGenerateResume} isGenerating={ isGeneratingResume } />
-                ) : (
-                  <div className="rounded-3xl border border-dashed border-purple-500/50 bg-purple-500/5 p-8 text-center">
-                    <p className="text-gray-600 dark:text-gray-300">
-                      ATS analysis results will appear here
-                      after you analyze a job description.
-                    </p>
-
-                    <p className="text-sm text-gray-500 mt-2">
-                      Paste a job description and click
-                      Analyze ATS Compatibility.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* RIGHT PANEL - Job Description & Analysis */}
-          <div className="lg:col-span-7 space-y-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="lg:col-span-8 space-y-6">
             <div className="rounded-3xl border border-black/20 dark:border-white/10 bg-black/5 dark:bg-white/5 p-6">
+              <div
+                className="mb-6 text-center border-purple-500 bg-purple-500/10 flex-1
+      p-4
+      rounded-2xl
+      border
+      cursor-pointer
+      transition-all"
+              >
+                <p className="text-sm text-gray-500">
+                  Resume Selected
+                </p>
+
+                <h4 className="text-2xl font-semibold mt-1 text-black/70 ">
+                  {resumeName}
+                </h4>
+              </div>
               <label
                 htmlFor="jobDescription"
                 className="block text-lg font-semibold mb-3"
@@ -219,7 +258,7 @@ function Ats() {
                   Choose Analysis Type
                 </p>
 
-                <div className="flex flex-col md:flex-row gap-3">
+                <div className="flex flex-col md:flex-row gap-3 mt3">
                   <label
                     className={`
       flex-1
@@ -301,6 +340,9 @@ function Ats() {
                   if (analysisCompleted) {
                     setAnalysisCompleted(false);
                   }
+                  setOptimizedResume(null);
+                  setAiResult(null);
+                  setAnalysisResult(null);
                 }}
                 placeholder="Paste the target job description here..."
                 className="w-full h-80 p-4 rounded-2xl border border-black/20 dark:border-white/10 bg-white dark:bg-black/50 text-black dark:text-white resize-y focus:outline-none focus:ring-2 focus:ring-purple-500"
@@ -315,6 +357,57 @@ function Ats() {
             </div>
           </div>
         </div>
+        {/* Analysis Results */}
+
+        {(analysisResult || aiResult) && (
+          <div
+            className="mt-8 scroll-mt-24"
+            ref={aiResultRef}
+          >
+            {analysisResult ? (
+              <AtsResult analysis={analysisResult} />
+            ) : (
+              <AIResult
+                analysis={aiResult}
+                onGenerateResume={handleGenerateResume}
+                isGenerating={isGeneratingResume}
+              />
+            )}
+          </div>
+        )}
+        {isGeneratingResume && (
+          <div className="mt-8 rounded-3xl border border-purple-500/20 bg-purple-500/5 p-6 text-center">
+            Generating ATS Optimized Resume...
+          </div>
+        )}
+
+        {optimizedResume && (
+          <div
+            className="mt-8 scroll-mt-24"
+            ref={optimizedResumeRef}
+          >
+            <OptimizedResume resume={optimizedResume} />
+          </div>
+        )}
+        {optimizedResume && (
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={handleDownloadResume}
+              className="
+        px-8
+        py-4
+        rounded-2xl
+        bg-purple-600
+        text-white
+        font-semibold
+        hover:bg-purple-700
+        transition
+      "
+            >
+              📄 Download PDF Resume
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -19,10 +19,9 @@ function Analysis() {
   useEffect(() => {
     const fetchAnalysis = async () => {
       const response = await fetch(
-        `http://localhost:5000/api/resume/${resumeId}`
+        `${import.meta.env.VITE_API_BASE_URL}/api/resume/${resumeId}`
       );
       const data = await response.json();
-      console.log("Data:", data);
       setAnalysisData(data);
     };
 

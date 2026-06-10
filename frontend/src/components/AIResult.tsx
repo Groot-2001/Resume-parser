@@ -14,7 +14,12 @@ function AIResult({
 }: AtsResultProps) {
   return (
     <div className="mt-8 rounded-3xl border border-black/20 dark:border-white/10 bg-black/5 dark:bg-white/5 p-6">
-      <h2 className="text-2xl font-semibold mb-6">
+      <h2 className="text-2xl font-semibold mb-6 text-center border-purple-500 bg-purple-500/10 flex-1
+      p-4
+      rounded-2xl
+      border
+      cursor-pointer
+      transition-all">
         AI Resume Coach
       </h2>
 

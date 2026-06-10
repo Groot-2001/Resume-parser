@@ -23,7 +23,7 @@ function ResumeUploader() {
       formData.append("file", file);
 
       const response = await fetch(
-        `http://localhost:5000/api/resume/upload_resume`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/resume/upload_resume`,
         {
           method: "POST",
           body: formData,
@@ -49,7 +49,7 @@ function ResumeUploader() {
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/resume/analyze_resume`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/resume/analyze_resume`,
         {
           method: "POST",
           headers: {
